@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Add, Close } from "@material-ui/icons";
 import { useNavigate } from "react-router-dom";
 
@@ -159,26 +159,34 @@ const Cb = styled.input`
 
 const Form = ({ setHandleOpen, formType }) => {
   const navigate = useNavigate();
-  const [checkedItems, setCheckedItems] = useState([]);
-  const [text, setText] = useState("");
-  const [subtask, setSubTask] = useState([]);
+  const [currentValue, setCurrentValue] = useState("");
+  const [currentTask, setCurrentTask] = useState([]);
+  const [taskValues, setTaskValues] = useState("");
   const [todoObject, setTodoObject] = useState({
     title: "",
     description: "",
     date: "",
+    subtask: [],
     taskType: "" || "Personal",
   });
 
   //Get Task By Id
-  const taskId = location.pathname.split("/")[2];
+  const taskId = localStorage["id"];
   var task;
-  JSON.parse(localStorage["task"])
-    .filter((i) => {
+  const threadTask = (a) => {
+    a.filter((i) => {
       return i._id == taskId;
     })
     .map((i) => {
       task = i;
     });
+  }
+  const z = localStorage["task"]
+  const t = JSON.parse(z);
+  threadTask(t)
+
+
+  console.log(task)
 
   //Date Variables
   const date = [];
@@ -199,7 +207,7 @@ const Form = ({ setHandleOpen, formType }) => {
   const handleClose = (e) => {
     e.preventDefault();
     setHandleOpen(false);
-    navigate("/task");
+    navigate("/");
   };
 
   //Req body automation function
@@ -207,39 +215,51 @@ const Form = ({ setHandleOpen, formType }) => {
     setTodoObject({ ...todoObject, [e.target.name]: e.target.value });
   };
 
-  //Subtask
+  //addSubTask
   const handleSubTask = (e) => {
-    setText(e.target.value);
+    setCurrentTask([...currentTask, taskValues]);
   };
 
-  //Add Subtask
-  const addSubTask = () => {
-    setSubTask([...subtask, text]);
+  //if checked added subtask
+  const threadMax = (a) => {
+    setCurrentValue([...currentValue, a]);
   };
 
-  const checkItem = (e) => {
-    const valueToAdd = e.target.value;
-
-    if (e.target.checked) {
-      if (!checkedItems.includes(valueToAdd)) {
-        setCheckedItems((prevItems) => [...prevItems, valueToAdd]);
-      }
+  //if not checked remove subtask!
+  const removeThread = (a) => {
+    console.log(currentValue)
+    setCurrentValue(currentValue.filter((i) => i !== a))
+  }
+  
+  //Check if subtask is updated!
+  const handleCheck = async (e) => {
+    const check = e.target.checked;
+    if (check === true) { 
+      threadMax(e.target.value);
     } else {
-      setCheckedItems((prevItems) =>
-        prevItems.filter((item) => item !== valueToAdd)
-      );
+      console.log("not checked!");
+      removeThread(e.target.value)
     }
   };
+  
+  
+  useEffect(()=> {
+    setTodoObject({...todoObject, subtask: [...currentValue]})
+  },[currentValue])
 
-  const data = { ...todoObject, subtask: checkedItems };
-  console.log(data);
+  console.log("item removed!")
+  console.log('updated: ', currentValue)
+
+  // console.log("currentValue: ", currentValue);
+  // console.log(todoObject)
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const url = "http://localhost:8800/api/todo/c";
     fetch(url, {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(todoObject),
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
@@ -252,6 +272,7 @@ const Form = ({ setHandleOpen, formType }) => {
       .then((data) => {
         if (data.data?.title) {
           console.log("Task created!");
+          alert('Task created!')
         } else {
           console.log("Task not created!");
         }
@@ -334,40 +355,17 @@ const Form = ({ setHandleOpen, formType }) => {
             </Tc>
             <Ns>
               <Icon>
-                <Add onClick={addSubTask} />
+                <Add />
               </Icon>
-              <Input
-                type="text"
-                placeholder="Add New Subtask"
-                onChange={handleSubTask}
-              />
+              <Input type="text" placeholder="Add New Subtask" />
             </Ns>
-            {task.subtask && subtask ? (
+            {task.subtask ? (
               <>
-              {subtask.map((i) => (
-                  <Sc>
+                {task.subtask.map((i, ind) => (
+                  <Sc id="append" key={ind}>
                     <Item>
                       <Icon>
-                        <Cb
-                          type="checkbox"
-                          name="subtask"
-                          onChange={checkItem}
-                          value={i}
-                        />
-                      </Icon>
-                      <Text>{i}</Text>
-                    </Item>
-                  </Sc>
-                ))}
-                {task.subtask.map((i) => (
-                  <Sc id="append">
-                    <Item>
-                      <Icon>
-                        <Cb
-                          type="checkbox"
-                          name="subtask"
-                          onChange={checkItem}
-                        />
+                        <Cb type="checkbox" />
                       </Icon>
                       <Text id="target">{i}</Text>
                     </Item>
@@ -416,33 +414,24 @@ const Form = ({ setHandleOpen, formType }) => {
             </Tc>
             <Ns>
               <Icon>
-                <Add onClick={addSubTask} />
+                <Add onClick={handleSubTask} />
               </Icon>
               <Input
                 type="text"
                 placeholder="Add New Subtask"
-                onChange={handleSubTask}
+                onChange={(e) => setTaskValues(e.target.value)}
               />
             </Ns>
-            {subtask ? (
-              <>
-                {subtask.map((i) => (
-                  <Sc>
-                    <Item>
-                      <Icon>
-                        <Cb
-                          type="checkbox"
-                          name="subtask"
-                          onChange={checkItem}
-                          value={i}
-                        />
-                      </Icon>
-                      <Text>{i}</Text>
-                    </Item>
-                  </Sc>
-                ))}
-              </>
-            ) : null}
+            {currentTask.map((i, index) => (
+              <Sc key={index}>
+                <Item>
+                  <Icon>
+                    <Cb type="checkbox" onChange={handleCheck} value={i} />
+                  </Icon>
+                  <Text>{i}</Text>
+                </Item>
+              </Sc>
+            ))}
           </>
         )}
       </Whc>

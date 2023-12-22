@@ -7,7 +7,9 @@ const TodoSchema = new mongoose.Schema({
     subtask: [
         {type: String}
     ],
-    taskType: {type: String, required: true}
+    taskType: {type: String, required: true},
+    isChecked: {type: Boolean, default: false},
+    isOwner: {type: String, required: true}
 }, {timestamps: true})
 
 module.exports = mongoose.model("Todo", TodoSchema)

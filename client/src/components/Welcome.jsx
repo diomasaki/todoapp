@@ -124,7 +124,6 @@ const Cb = styled.input`
 
 const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
   const [task, setTask] = useState([])
-  const pattern = /^\/task\//
 
   //Open Create Form
   const handleClick = () => {
@@ -133,10 +132,42 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
   }
 
   //Open Edit Form
-  const handleEdit = () => {
+  const handleEdit = (a) => {
+    localStorage.setItem("id", a)
     setFormType("edit")
     setHandleOpen(true)
   }
+
+  //updateTask
+  const updateTask = (a,b) => {
+    const url = `http://localhost:8800/api/todo/update/${a}`
+    fetch(url, {
+      method: "PUT",
+      body: JSON.stringify(b),
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      mode: "cors",
+      cache: "no-cache",
+      referrerPolicy: "no-referrer",
+      credentials: "same-origin"
+    }).then(res => res.json()).then((data) => console.log(data)).catch((err)=>console.log(err))
+  }
+
+  //handleCheck for task done!
+  const taskDone = (e) => {
+    const c = e.target.checked
+    if (c === true) {
+      console.log("checked!")
+      console.log(e.target.value)
+      updateTask(e.target.value, {isChecked: true})
+    }else {
+      updateTask(e.target.value, {isChecked: false})
+      console.log("task not updated to done!")
+      location.reload()
+    }
+  }
+
 
   useEffect(() => {
     const url = "http://localhost:8800/api/todo/"
@@ -170,7 +201,11 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
           <Tc key={key}>
             <Item>
               <Icon>
-                <Cb type="checkbox" />
+                {i.isChecked === true ? (
+                  <Cb type="checkbox" value={i._id} onChange={taskDone} checked="true"/>
+                  ) : 
+                  <Cb type="checkbox" value={i._id} onChange={taskDone} />
+                  }
               </Icon>
               <Tp>
                 <Text>{i.title}</Text>
@@ -199,9 +234,7 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
               </Tp>
             </Item>
             <Icon>
-              <Link to={pattern.test(location.pathname) ? location.pathname : `/task/${i._id}`}>
-                <KeyboardArrowRightOutlined onClick={handleEdit} />
-              </Link>
+                <KeyboardArrowRightOutlined onClick={() => handleEdit(i._id)} />
             </Icon>
           </Tc>
           ))}

@@ -113,7 +113,7 @@ const Login = () => {
       }else {
         console.log("Login success! need action")
         localStorage.setItem("user", JSON.stringify(account))
-        navigate("/task")
+        location.pathname = "/"
       }
     })
     
