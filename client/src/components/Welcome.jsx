@@ -1,13 +1,25 @@
 import { Add, CalendarToday, KeyboardArrowRightOutlined } from '@material-ui/icons';
 import styled from "styled-components";
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom';
 
 //Welcome Container
 const Wc = styled.div`
     flex-direction: column;
     display: flex;
     width: 80%;
+`
+
+//Header Content
+const Hd = styled.div`
+    justify-content: space-between;
+    align-items: center;
+    margin: 0px 20px;
+    display: flex;
+`
+
+//User Name
+const User = styled.span`
+    font-size: 19px;
 `
 
 //Heading
@@ -71,7 +83,7 @@ const Prop = styled.div`
     display: flex;
     gap: 12px;
 
-    @media only screen and (max-width: ${props => props.handleOpen == false ? '600px' : '1150px'}) {
+    @media only screen and (max-width: ${props => props.value == false ? '600px' : '1150px'}) {
         display: none;
     }
 `
@@ -110,7 +122,9 @@ const Fb = styled.div`
 
 //Square
 const Square = styled.div`
-  background-color: rgb(255, 107, 107);
+  background-color: ${(props) => props.value === "Personal" && "rgb(255, 107, 107)" || 
+                                 props.value === "Work" &&  "rgb(68, 163, 255)" || 
+                                 props.value === "Groups" && "rgb(255, 212, 59)"};
   border-radius: 3px;
   padding: 8px;
 `
@@ -123,7 +137,8 @@ const Cb = styled.input`
 
 
 const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
-  const [task, setTask] = useState([])
+  const [task, setTask] = useState("")
+  const id = JSON.parse(localStorage["user"])
 
   //Open Create Form
   const handleClick = () => {
@@ -164,13 +179,12 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
     }else {
       updateTask(e.target.value, {isChecked: false})
       console.log("task not updated to done!")
-      location.reload()
     }
   }
 
 
   useEffect(() => {
-    const url = "http://localhost:8800/api/todo/"
+    const url = `http://localhost:8800/api/todo/${id._id}`
           fetch(url, {
             method: "GET",    
             headers: {
@@ -189,7 +203,10 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
 
   return (
     <Wc>
-        <Ht>Today</Ht>
+        <Hd>
+          <Ht>Today</Ht>
+          <User><strong>Welcome </strong>`{id.username}`</User>
+        </Hd>
         <Mc>
           <Ac onClick={handleClick} >
             <Icon>
@@ -197,19 +214,27 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
             </Icon>
             <AText>Add New Task</AText>
           </Ac>
-          {task.map((i, key) => (
-          <Tc key={key}>
+          {task == "" ? (
+            "You don't have any task!"
+          ) : 
+          <>
+          {task.map((i) => (
+          <Tc key={i._id}>
             <Item>
               <Icon>
                 {i.isChecked === true ? (
-                  <Cb type="checkbox" value={i._id} onChange={taskDone} checked="true"/>
+                  <Cb type="checkbox" value={i._id} onChange={taskDone} defaultChecked/>
                   ) : 
                   <Cb type="checkbox" value={i._id} onChange={taskDone} />
                   }
               </Icon>
               <Tp>
                 <Text>{i.title}</Text>
-                <Prop handleOpen={handleOpen}>
+                <Prop value={handleOpen}>
+                  {i.date == "" ? (
+                    null
+                  ) : 
+                  <>
                   <Pi>
                     <Icon>
                       <CalendarToday style={{ height: "18px", marginTop: "2px" }}/>
@@ -217,6 +242,8 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
                     <Pt>{i.date}</Pt>
                   </Pi>
                   <Line />
+                  </>
+                  }
                   <Pi>
                     <Icon>
                       <Fb>{i.subtask.length}</Fb>
@@ -226,18 +253,20 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
                   <Line />
                   <Pi>
                     <Icon>
-                      <Square />
+                      <Square value={i.taskType}/>
                     </Icon>
-                    <Pt>Personal</Pt>
+                    <Pt>{i.taskType}</Pt>
                   </Pi>
                 </Prop>
               </Tp>
             </Item>
             <Icon>
-                <KeyboardArrowRightOutlined onClick={() => handleEdit(i._id)} />
+                <KeyboardArrowRightOutlined onClick={() => { handleOpen ? console.log("disabled") : handleEdit(i._id) } } />
             </Icon>
           </Tc>
           ))}
+          </>
+          }
         </Mc>
     </Wc>
   )

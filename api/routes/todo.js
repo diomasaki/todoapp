@@ -47,4 +47,16 @@ routes.get("/", async (req, res) => {
     }
 })
 
+
+//Get User Task
+routes.get("/:id", async (req, res) => {
+    try{
+        const task = await Todo.find({ isOwner: req.params.id })
+        if (!task) return STATUS(res, "401", "Failed", "Task not found!", "User Not Authenticated!")
+        return STATUS(res, 200, "User Authenticated!", "Task Received!", task )
+    }catch (err) {
+        return STATUS(res, 500, "Failed", "User Not Authenticated!", err)
+    }
+})
+
 module.exports = routes;

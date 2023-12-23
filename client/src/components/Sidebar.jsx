@@ -141,6 +141,14 @@ const Square = styled.div`
 `
 
 const Sidebar = () => {
+    const task = JSON.parse(localStorage["task"])
+
+    //Signout Function
+    const handleSignOut = () => {
+        localStorage.removeItem("user")
+        location.reload()
+    }
+
   return (
     <Sc>
         <Si>
@@ -169,7 +177,11 @@ const Sidebar = () => {
                         </Icon>
                         <ITitle>Today</ITitle>
                     </Item>
-                    <Notifications>9</Notifications>
+                    {task.length > 0 ? (
+                        <Notifications>{task.length}</Notifications>
+                    ) : 
+                        <Notifications>0</Notifications>
+                    }
                 </Li>
                 <Li>
                     <Item>
@@ -218,7 +230,7 @@ const Sidebar = () => {
             <Icon>
                 <ExitToApp />
             </Icon>
-            <ITitle>Sign Out</ITitle>
+            <ITitle onClick={handleSignOut}>Sign Out</ITitle>
         </Auth>
     </Sc>
   )

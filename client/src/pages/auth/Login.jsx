@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom"
 import React, { useState } from 'react'
 import styled from "styled-components"
 
@@ -82,7 +81,6 @@ const Login = () => {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const account = {email, password}
-  const navigate = useNavigate()
 
   const inputValidation = (e) => {
     const pattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
@@ -112,7 +110,7 @@ const Login = () => {
         console.log("Login failed! no action")
       }else {
         console.log("Login success! need action")
-        localStorage.setItem("user", JSON.stringify(account))
+        localStorage.setItem("user", JSON.stringify(data.data))
         location.pathname = "/"
       }
     })

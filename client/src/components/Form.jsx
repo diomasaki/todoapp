@@ -158,50 +158,37 @@ const Cb = styled.input`
 `;
 
 const Form = ({ setHandleOpen, formType }) => {
+   //User Id
+   const id = JSON.parse(localStorage["user"])._id
+   //Get Task By Id
+   const taskId = localStorage["id"];
+   var task;
+   const threadTask = (a) => {
+     a.filter((i) => {
+       return i._id == taskId;
+     })
+     .map((i) => {
+       task = i;
+     });
+   }
+   const z = localStorage["task"]
+   const t = JSON.parse(z);
+   threadTask(t)
+ 
+ 
   const navigate = useNavigate();
-  const [currentValue, setCurrentValue] = useState("");
+  const [currentValue, setCurrentValue] = useState(task?.subtask || "");
   const [currentTask, setCurrentTask] = useState([]);
   const [taskValues, setTaskValues] = useState("");
   const [todoObject, setTodoObject] = useState({
-    title: "",
-    description: "",
-    date: "",
+    title: task?.title || "",
+    description: task?.description || "",
+    date: task?.date || "",
     subtask: [],
     taskType: "" || "Personal",
+    isOwner: id
   });
 
-  //Get Task By Id
-  const taskId = localStorage["id"];
-  var task;
-  const threadTask = (a) => {
-    a.filter((i) => {
-      return i._id == taskId;
-    })
-    .map((i) => {
-      task = i;
-    });
-  }
-  const z = localStorage["task"]
-  const t = JSON.parse(z);
-  threadTask(t)
-
-
-  console.log(task)
-
-  //Date Variables
-  const date = [];
-  const x = new Date();
-  const a = new Date("12-31-2024");
-
-  //Get All Date's from 2023-2024
-  function dateLoop() {
-    for (let dates = x; dates <= a; dates.setDate(dates.getDate() + 1)) {
-      date.push(dates.toLocaleDateString());
-    }
-    date.push(a.toLocaleDateString());
-  }
-
-  dateLoop();
 
   //Close Form
   const handleClose = (e) => {
@@ -227,7 +214,6 @@ const Form = ({ setHandleOpen, formType }) => {
 
   //if not checked remove subtask!
   const removeThread = (a) => {
-    console.log(currentValue)
     setCurrentValue(currentValue.filter((i) => i !== a))
   }
   
@@ -235,9 +221,10 @@ const Form = ({ setHandleOpen, formType }) => {
   const handleCheck = async (e) => {
     const check = e.target.checked;
     if (check === true) { 
+      console.log("checked: ", e.target.value)
       threadMax(e.target.value);
     } else {
-      console.log("not checked!");
+      console.log("not checked!", e.target.value);
       removeThread(e.target.value)
     }
   };
@@ -246,12 +233,6 @@ const Form = ({ setHandleOpen, formType }) => {
   useEffect(()=> {
     setTodoObject({...todoObject, subtask: [...currentValue]})
   },[currentValue])
-
-  console.log("item removed!")
-  console.log('updated: ', currentValue)
-
-  // console.log("currentValue: ", currentValue);
-  // console.log(todoObject)
 
 
   const handleSubmit = (e) => {
@@ -273,6 +254,7 @@ const Form = ({ setHandleOpen, formType }) => {
         if (data.data?.title) {
           console.log("Task created!");
           alert('Task created!')
+          location.reload()
         } else {
           console.log("Task not created!");
         }
@@ -285,7 +267,7 @@ const Form = ({ setHandleOpen, formType }) => {
     const url = `http://localhost:8800/api/todo/update/${taskId}`;
     fetch(url, {
       method: "PUT",
-      body: JSON.stringify(data),
+      body: JSON.stringify(todoObject),
       mode: "cors",
       headers: {
         "Content-Type": "application/json",
@@ -297,13 +279,28 @@ const Form = ({ setHandleOpen, formType }) => {
       .then((res) => res.json())
       .then((data) => {
         if (data.data?.title) {
-          console.log("Task updated!");
+          alert("Task updated!");
+          location.reload()
         } else {
-          console.log("Task not updated!");
+          alert("Task not updated!");
         }
       })
       .catch((err) => console.log(err));
   };
+
+  //Date
+  let data = []
+  const nowDate = new Date();
+  const endDate = new Date("2024-12-31")
+  function dateCount(a,b) {
+    for (let x = a; x < b; x.setDate(x.getDate() + 1)) { 
+      data.push(x.toDateString().slice(4));
+    }
+  }
+  dateCount(nowDate,endDate)
+
+  console.log(todoObject)
+  
 
   return (
     <Fc>
@@ -343,7 +340,7 @@ const Form = ({ setHandleOpen, formType }) => {
               <Ft>Due Date</Ft>
               <Fs name="date" onChange={handleChange}>
                 {task.date ? <Fo disabled>{task.date}</Fo> : null}
-                {date.map((i, id) => (
+                {data.map((i, id) => (
                   <Fo value={i} key={id}>
                     {i}
                   </Fo>
@@ -353,19 +350,30 @@ const Form = ({ setHandleOpen, formType }) => {
             <Tc>
               <Title>Subtasks:</Title>
             </Tc>
-            <Ns>
+            <Ns> 
+              {/* HERE */}
               <Icon>
-                <Add />
+                <Add onClick={handleSubTask}/>
               </Icon>
-              <Input type="text" placeholder="Add New Subtask" />
+              <Input type="text" placeholder="Add New Subtask" onChange={(e) => setTaskValues(e.target.value)} />
             </Ns>
+            {currentTask.map((i, index) => (
+              <Sc key={index}>
+                <Item>
+                  <Icon>
+                    <Cb type="checkbox" onChange={handleCheck} value={i} />
+                  </Icon>
+                  <Text>{i}</Text>
+                </Item>
+              </Sc>
+            ))}
             {task.subtask ? (
               <>
                 {task.subtask.map((i, ind) => (
                   <Sc id="append" key={ind}>
                     <Item>
                       <Icon>
-                        <Cb type="checkbox" />
+                        <Cb type="checkbox" onChange={handleCheck} value={i} defaultChecked/>
                       </Icon>
                       <Text id="target">{i}</Text>
                     </Item>
@@ -402,7 +410,7 @@ const Form = ({ setHandleOpen, formType }) => {
             <Fco>
               <Ft>Due Date</Ft>
               <Fs name="date" onChange={handleChange}>
-                {date.map((i, id) => (
+                {data.map((i, id) => (
                   <Fo value={i} key={id}>
                     {i}
                   </Fo>
@@ -414,6 +422,7 @@ const Form = ({ setHandleOpen, formType }) => {
             </Tc>
             <Ns>
               <Icon>
+                  {/* HERE */}
                 <Add onClick={handleSubTask} />
               </Icon>
               <Input
