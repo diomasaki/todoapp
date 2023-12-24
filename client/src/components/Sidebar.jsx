@@ -1,13 +1,26 @@
 import { AddBox, ArrowRightTwoTone, CheckBox, ExitToApp, Notes, Search, SquareFoot } from '@material-ui/icons';
 import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 
 //Sidebar Container
 const Sc = styled.div`
     background-color: rgb(244, 244, 244);
+    justify-content: space-between;
+    height: calc(100vh - 80px);
+    flex-direction: column;
     border-radius: 20px;
+    display: flex;
     padding: 15px;
     width: 20%;
+
+    @media only screen and (max-width: 2200px) {
+        max-height: 1024px; 
+    }
+
+    @media only screen and (max-width: 1200px) {
+        display: none;
+    }
 `
 
 //Sidebar Info
@@ -45,9 +58,12 @@ const Sfc = styled.input`
     width: 100%;
 `
 
+//Top
+const Top = styled.div``
+
 //Task List
 const Tl = styled.div`
-    margin: 30px 0px;
+    margin: 50px 0px;
 `
 
 //Task Title
@@ -90,6 +106,11 @@ const Li = styled.li`
 const Item = styled.div`
     align-items: center;
     display: flex;
+
+    @media only screen and (max-width: 1020px) {
+        display: flex;
+        overflow: hidden;
+    }
 `
 
 //Icon
@@ -112,6 +133,10 @@ const Notifications = styled.div`
     margin-right: 5px;
     padding: 8px 12px;
     font-weight: 600;
+
+    @media only screen and (max-width: 1000px) {
+        display: none;
+    }
 `
 
 //Auth Section
@@ -140,8 +165,10 @@ const Square = styled.div`
     padding: 8px;
 `
 
-const Sidebar = () => {
+const Sidebar = ({ tasks, setTask}) => {
     const task = JSON.parse(localStorage["task"])
+    const personal = task.filter((i) => i.taskType == "Personal")
+    const work = task.filter((i) => i.taskType == "Work")
 
     //Signout Function
     const handleSignOut = () => {
@@ -149,8 +176,25 @@ const Sidebar = () => {
         location.reload()
     }
 
+    //handleTask Component
+    const navigate = useNavigate()
+    const handleNavigate = (a) => {
+        if (a === "/") {
+            const task = JSON.parse(localStorage["task"])
+            console.log(task)
+            setTask(task)
+        } else {
+            const task = JSON.parse(localStorage["task"])
+            console.log(task)
+            const x = a[1].toUpperCase() + a.slice(2)
+            setTask(task.filter((i) => i.taskType === x))
+        }
+        navigate(a)
+    }
+
   return (
     <Sc>
+        <Top>
         <Si>
             <St>Menu</St>
             <Ic>
@@ -170,7 +214,7 @@ const Sidebar = () => {
                     </Item>
                     <Notifications>12</Notifications>
                 </Li>
-                <Li>
+                <Li onClick={()=> handleNavigate("/")}>
                     <Item>
                         <Icon>
                             <CheckBox />
@@ -197,23 +241,31 @@ const Sidebar = () => {
         <Tl>
             <Tm>LISTS</Tm>
             <Ul>
-                <Li>
+                <Li onClick={() => handleNavigate("/personal")}>
                     <Item>
                         <Icon>
                             <Square color={"rgb(255, 107, 107)"}/>
                         </Icon>
                         <ITitle>Personal</ITitle>
                     </Item>
-                    <Notifications>12</Notifications>
+                    {personal.length > 0 ? (
+                        <Notifications>{personal.length}</Notifications>
+                    ) : 
+                        <Notifications>0</Notifications>
+                    }
                 </Li>
-                <Li>
+                <Li onClick={() => handleNavigate("/work")}>
                     <Item>
                         <Icon>
                             <Square color={"rgb(68, 163, 255)"} />
                         </Icon>
                         <ITitle>Work</ITitle>
                     </Item>
-                    <Notifications>9</Notifications>
+                    {work.length > 0 ? (
+                        <Notifications>{work.length}</Notifications>
+                    ) : 
+                        <Notifications>0</Notifications>
+                    }
                 </Li>
                 <Li>
                     <Item>
@@ -226,6 +278,7 @@ const Sidebar = () => {
                 </Li>
             </Ul>
         </Tl>
+        </Top>
         <Auth>
             <Icon>
                 <ExitToApp />

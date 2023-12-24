@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import styled from "styled-components"
-import Sidebar from "../components/Sidebar";
 import Welcome from "../components/Welcome";
 import Form from "../components/Form";
 
@@ -25,7 +24,6 @@ const Home = () => {
  return(
     <Hc>
         <Fc>
-            <Sidebar />
             <Welcome setHandleOpen={setHandleOpen} handleOpen={handleOpen} setFormType={setFormType} />
             {!handleOpen ? (
                 null

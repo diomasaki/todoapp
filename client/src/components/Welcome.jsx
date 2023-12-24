@@ -1,12 +1,17 @@
 import { Add, CalendarToday, KeyboardArrowRightOutlined } from '@material-ui/icons';
 import styled from "styled-components";
 import React, { useEffect, useState } from 'react'
+import Sidebar from './Sidebar';
 
 //Welcome Container
 const Wc = styled.div`
     flex-direction: column;
     display: flex;
     width: 80%;
+
+    @media only screen and (max-width: 1200px) {
+      width: 100%;
+  }
 `
 
 //Header Content
@@ -16,6 +21,7 @@ const Hd = styled.div`
     margin: 0px 20px;
     display: flex;
 `
+
 
 //User Name
 const User = styled.span`
@@ -28,6 +34,15 @@ const Ht = styled.h1`
     font-size: 45px;
     margin: 0px;
     flex: 1;
+
+    @media only screen and (max-width: 601px) {
+      display: flex;  
+      overflow: hidden;
+    }
+
+    @media only screen and (max-width: 500px) {
+      display: none;
+    }
 `
 
 //Main Content
@@ -83,8 +98,8 @@ const Prop = styled.div`
     display: flex;
     gap: 12px;
 
-    @media only screen and (max-width: ${props => props.value == false ? '600px' : '1150px'}) {
-        display: none;
+    @media only screen and (max-width: ${props => props.value == false ? '655px' : '1150px'}) {
+      display: none;
     }
 `
 
@@ -137,7 +152,8 @@ const Cb = styled.input`
 
 
 const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
-  const [task, setTask] = useState("")
+  const x = location.pathname
+  const [task, setTask] = useState([])
   const id = JSON.parse(localStorage["user"])
 
   //Open Create Form
@@ -154,7 +170,7 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
   }
 
   //updateTask
-  const updateTask = (a,b) => {
+  const updateTask = (a,b,c) => {
     const url = `http://localhost:8800/api/todo/update/${a}`
     fetch(url, {
       method: "PUT",
@@ -166,7 +182,19 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
       cache: "no-cache",
       referrerPolicy: "no-referrer",
       credentials: "same-origin"
-    }).then(res => res.json()).then((data) => console.log(data)).catch((err)=>console.log(err))
+    }).then(res => res.json()).then((data) => {
+      //Get Task from Storage
+      const xa = JSON.parse(localStorage["task"])
+      //Need to define a variable for the array.map() method, cuz array.map() create's a new array  
+      const update = xa.map((i) => {
+        if (i._id === a) {
+          return {...i, isChecked: c}
+        }
+        return i
+      })
+      localStorage.setItem("task", JSON.stringify(update))
+      console.log(data)
+    }).catch((err)=>console.log(err))
   }
 
   //handleCheck for task done!
@@ -175,9 +203,9 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
     if (c === true) {
       console.log("checked!")
       console.log(e.target.value)
-      updateTask(e.target.value, {isChecked: true})
+      updateTask(e.target.value, {isChecked: true}, true)
     }else {
-      updateTask(e.target.value, {isChecked: false})
+      updateTask(e.target.value, {isChecked: false}, false)
       console.log("task not updated to done!")
     }
   }
@@ -196,15 +224,30 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
             cache: "no-cache"
           })
           .then(res => res.json())
-          .then((task) => { if (task.data.map((i) => i?.title)) { setTask(task.data); localStorage.setItem("task", JSON.stringify(task.data))}else { setTask("No task found!")}})
+          .then((task) => { if (task.data.map((i) => i?.title)) 
+            { 
+              location.pathname == "/" && setTask(task.data) || 
+              location.pathname == "/personal" && setTask(task.data.filter((i) => i.taskType === "Personal")) || 
+              location.pathname == "/work" && setTask(task.data.filter((i) => i.taskType === "Work"))
+              localStorage.setItem("task", JSON.stringify(task.data))
+            } else { setTask("No task found!")}})
           .catch((err) => console.log(err))
   }, [])
 
 
   return (
+    <>
+    <Sidebar setTask={setTask} />
     <Wc>
         <Hd>
-          <Ht>Today</Ht>
+          {x === "/" ? (
+            <Ht>Today</Ht>
+          ) : 
+          x === "/personal" ? (
+            <Ht>Personal</Ht>
+          ) : 
+            <Ht>Work</Ht>
+          }
           <User><strong>Welcome </strong>`{id.username}`</User>
         </Hd>
         <Mc>
@@ -214,61 +257,63 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
             </Icon>
             <AText>Add New Task</AText>
           </Ac>
-          {task == "" ? (
-            "You don't have any task!"
+          {task ? (
+             <>
+             {task.map((i) => (
+             <Tc key={i._id}>
+               <Item>
+                 <Icon>
+                   {i.isChecked === true ? (
+                     <Cb type="checkbox" value={i._id} onChange={taskDone} defaultChecked/>
+                     ) : 
+                     <Cb type="checkbox" value={i._id} onChange={taskDone} />
+                     }
+                 </Icon>
+                 <Tp>
+                   <Text>{i.title}</Text>
+                   <Prop value={handleOpen}>
+                     {i.date == "" ? (
+                       null
+                     ) : 
+                     <>
+                     <Pi>
+                       <Icon>
+                         <CalendarToday style={{ height: "18px", marginTop: "2px" }}/>
+                       </Icon>
+                       <Pt>{i.date}</Pt>
+                     </Pi>
+                     <Line />
+                     </>
+                     }
+                     <Pi>
+                       <Icon>
+                         <Fb>{i.subtask.length}</Fb>
+                       </Icon>
+                       <Pt>Subtasks</Pt>
+                     </Pi>
+                     <Line />
+                     <Pi>
+                       <Icon>
+                         <Square value={i.taskType}/>
+                       </Icon>
+                       <Pt>{i.taskType}</Pt>
+                     </Pi>
+                   </Prop>
+                 </Tp>
+               </Item>
+               <Icon>
+                   <KeyboardArrowRightOutlined onClick={() => { handleOpen ? console.log("disabled") : handleEdit(i._id) } } />
+               </Icon>
+             </Tc>
+             ))}
+             </>
           ) : 
-          <>
-          {task.map((i) => (
-          <Tc key={i._id}>
-            <Item>
-              <Icon>
-                {i.isChecked === true ? (
-                  <Cb type="checkbox" value={i._id} onChange={taskDone} defaultChecked/>
-                  ) : 
-                  <Cb type="checkbox" value={i._id} onChange={taskDone} />
-                  }
-              </Icon>
-              <Tp>
-                <Text>{i.title}</Text>
-                <Prop value={handleOpen}>
-                  {i.date == "" ? (
-                    null
-                  ) : 
-                  <>
-                  <Pi>
-                    <Icon>
-                      <CalendarToday style={{ height: "18px", marginTop: "2px" }}/>
-                    </Icon>
-                    <Pt>{i.date}</Pt>
-                  </Pi>
-                  <Line />
-                  </>
-                  }
-                  <Pi>
-                    <Icon>
-                      <Fb>{i.subtask.length}</Fb>
-                    </Icon>
-                    <Pt>Subtasks</Pt>
-                  </Pi>
-                  <Line />
-                  <Pi>
-                    <Icon>
-                      <Square value={i.taskType}/>
-                    </Icon>
-                    <Pt>{i.taskType}</Pt>
-                  </Pi>
-                </Prop>
-              </Tp>
-            </Item>
-            <Icon>
-                <KeyboardArrowRightOutlined onClick={() => { handleOpen ? console.log("disabled") : handleEdit(i._id) } } />
-            </Icon>
-          </Tc>
-          ))}
-          </>
+            "You don't have any task!"
           }
         </Mc>
     </Wc>
+    </>
+
   )
 }
 
