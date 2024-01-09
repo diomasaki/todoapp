@@ -317,4 +317,5 @@ const Welcome = ({ setHandleOpen, setFormType, handleOpen }) => {
   )
 }
 
+
 export default Welcome

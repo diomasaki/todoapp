@@ -165,7 +165,7 @@ const Square = styled.div`
     padding: 8px;
 `
 
-const Sidebar = ({ tasks, setTask}) => {
+const Sidebar = ({ setTask }) => {
     const task = JSON.parse(localStorage["task"])
     const personal = task.filter((i) => i.taskType == "Personal")
     const work = task.filter((i) => i.taskType == "Work")
@@ -192,6 +192,10 @@ const Sidebar = ({ tasks, setTask}) => {
         navigate(a)
     }
 
+    const handleReminders = (a) => {
+        navigate(a)
+    }
+
   return (
     <Sc>
         <Top>
@@ -214,7 +218,7 @@ const Sidebar = ({ tasks, setTask}) => {
                     </Item>
                     <Notifications>12</Notifications>
                 </Li>
-                <Li onClick={()=> handleNavigate("/")}>
+                <Li onClick={()=> location.pathname === "/reminders" ? handleReminders("/") : handleNavigate("/")}>
                     <Item>
                         <Icon>
                             <CheckBox />
@@ -227,7 +231,7 @@ const Sidebar = ({ tasks, setTask}) => {
                         <Notifications>0</Notifications>
                     }
                 </Li>
-                <Li>
+                <Li onClick={()=> handleNavigate("/reminders")}>
                     <Item>
                         <Icon>
                             <Notes />
@@ -241,7 +245,7 @@ const Sidebar = ({ tasks, setTask}) => {
         <Tl>
             <Tm>LISTS</Tm>
             <Ul>
-                <Li onClick={() => handleNavigate("/personal")}>
+                <Li onClick={() => location.pathname === "/reminders" ? handleReminders("/personal") : handleNavigate("/personal")}>
                     <Item>
                         <Icon>
                             <Square color={"rgb(255, 107, 107)"}/>
@@ -254,7 +258,7 @@ const Sidebar = ({ tasks, setTask}) => {
                         <Notifications>0</Notifications>
                     }
                 </Li>
-                <Li onClick={() => handleNavigate("/work")}>
+                <Li onClick={() => location.pathname === "/reminders" ? handleReminders("/work") : handleNavigate("/work")}>
                     <Item>
                         <Icon>
                             <Square color={"rgb(68, 163, 255)"} />
@@ -289,4 +293,4 @@ const Sidebar = ({ tasks, setTask}) => {
   )
 }
 
-export default Sidebar
+export default Sidebar;
